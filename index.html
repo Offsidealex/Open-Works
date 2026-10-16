@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>OpenWorks 0.1</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:14px Arial,sans-serif;color:#253346;background:#e7ecf2}header{height:53px;background:#f9fafc;border-bottom:1px solid #bac5d1;display:flex;align-items:center;padding:0 18px;gap:20px}.logo{font-size:20px;font-weight:700;color:#1463aa}.tabs{display:flex;gap:4px;padding:7px 12px;background:#f5f7fa;border-bottom:1px solid #b8c5d4}.tabs button,.toolbar button{border:1px solid #b9c6d5;background:white;border-radius:5px;padding:9px 13px;cursor:pointer}.tabs button.active{background:#dcecff;border-color:#5a91c6}.toolbar{padding:10px;display:flex;gap:8px;background:#eef3f8;border-bottom:1px solid #c5cfda}.layout{display:grid;grid-template-columns:245px 1fr;height:calc(100vh - 148px)}aside{background:#fff;border-right:1px solid #bbc8d7;padding:15px}aside h3{font-size:14px;margin:5px 0 15px}aside button{display:block;width:100%;text-align:left;padding:11px;border:0;background:transparent;cursor:pointer}aside button:hover,aside button.selected{background:#e0efff}main{position:relative;overflow:hidden}#view{width:100%;height:100%;display:block}.hint{position:absolute;bottom:14px;left:16px;background:#ffffffd9;padding:9px;border-radius:6px;font-size:12px}.axis{position:absolute;right:18px;top:16px;background:#ffffffd9;padding:8px;border-radius:5px}footer{height:35px;background:#f7f9fb;border-top:1px solid #bcc8d5;padding:9px 15px;font-size:12px}@media(max-width:650px){.layout{grid-template-columns:150px 1fr}.toolbar{flex-wrap:wrap}.layout{height:calc(100vh - 200px)}}
+</style></head><body>
+<header><span class="logo">⬡ OpenWorks</span><span>Pièce1</span><small>Prototype pédagogique · v0.1</small></header>
+<nav class="tabs"><button class="active">Fonctions</button><button>Esquisse</button><button disabled>Assemblage (à venir)</button><button disabled>Mise en plan (à venir)</button></nav>
+<div class="toolbar"><button id="cube">Afficher le cube</button><button id="front">Vue de face</button><button id="top">Vue de dessus</button><button id="iso">Isométrique</button><button id="reset">Réinitialiser</button></div>
+<div class="layout"><aside><h3>▾ Pièce1</h3><button data-plane="xy">▱ Plan de dessus (XY)</button><button data-plane="xz">▱ Plan de face (XZ)</button><button data-plane="yz">▱ Plan de droite (YZ)</button><hr><button id="treeCube">▣ Corps de démonstration</button><p style="color:#697b8b;font-size:12px">Sélectionne un plan pour l'afficher. Les outils d'esquisse arriveront dans la prochaine version.</p></aside><main><canvas id="view"></canvas><div class="axis">X · Y · Z</div><div class="hint">Souris : rotation · molette : zoom · clic sur un plan : sélection</div></main></div>
+<footer id="status">Prêt — visualisation 3D</footer>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script><script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const canvas=document.querySelector('#view'),main=canvas.parentElement;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#e8edf4');
+const camera=new THREE.PerspectiveCamera(45,1,.1,1000);camera.position.set(8,7,9);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;
+scene.add(new THREE.AmbientLight(0xffffff,1.7));
+const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(5,10,7);scene.add(light);
+scene.add(new THREE.GridHelper(20,20,0x91a5bb,0xcbd4df));
+scene.add(new THREE.AxesHelper(3));
+const cube=new THREE.Mesh(new THREE.BoxGeometry(2.6,2,2),new THREE.MeshStandardMaterial({color:0x62a7dd,metalness:.12,roughness:.45,transparent:true,opacity:.94}));scene.add(cube);
+const planes={};
+for(const [name,rotation,color] of [['xy',[Math.PI/2,0,0],0x4d9eec],['xz',[0,0,0],0x6ac48c],['yz',[0,Math.PI/2,0],0xe4a46a]]){
+const plane=new THREE.Mesh(new THREE.PlaneGeometry(6,6),new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity:.22,depthWrite:false}));
+plane.rotation.set(...rotation);plane.visible=false;scene.add(plane);planes[name]=plane;
+}
+function resize(){const w=main.clientWidth,h=main.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+new ResizeObserver(resize).observe(main);resize();
+function setView(x,y,z){camera.position.set(x,y,z);controls.target.set(0,0,0);controls.update()}
+document.querySelector('#cube').onclick=()=>{cube.visible=!cube.visible};
+document.querySelector('#treeCube').onclick=()=>{cube.visible=!cube.visible};
+document.querySelector('#front').onclick=()=>setView(0,0,10);
+document.querySelector('#top').onclick=()=>setView(0,10,.001);
+document.querySelector('#iso').onclick=()=>setView(8,7,9);
+document.querySelector('#reset').onclick=()=>{Object.values(planes).forEach(p=>p.visible=false);cube.visible=true;setView(8,7,9);document.querySelector('#status').textContent='Vue réinitialisée'};
+document.querySelectorAll('[data-plane]').forEach(b=>b.onclick=()=>{const key=b.dataset.plane;const next=!planes[key].visible;Object.values(planes).forEach(p=>p.visible=false);planes[key].visible=next;document.querySelectorAll('[data-plane]').forEach(el=>el.classList.toggle('selected',el===b&&next));document.querySelector('#status').textContent=next?'Plan sélectionné : '+key.toUpperCase():'Aucun plan sélectionné'});
+function animate(){requestAnimationFrame(animate);controls.update();renderer.render(scene,camera)}animate();
+</script></body></html>
