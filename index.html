@@ -8,9 +8,9 @@
 <div class="toolbar"><button id="cube">Afficher le cube</button><button id="front">Vue de face</button><button id="top">Vue de dessus</button><button id="iso">Isométrique</button><button id="reset">Réinitialiser</button></div>
 <div class="layout"><aside><h3>▾ Pièce1</h3><button data-plane="xy">▱ Plan de dessus (XY)</button><button data-plane="xz">▱ Plan de face (XZ)</button><button data-plane="yz">▱ Plan de droite (YZ)</button><hr><button id="treeCube">▣ Corps de démonstration</button><p style="color:#697b8b;font-size:12px">Sélectionne un plan pour l'afficher. Les outils d'esquisse arriveront dans la prochaine version.</p></aside><main><canvas id="view"></canvas><div class="axis">X · Y · Z</div><div class="hint">Souris : rotation · molette : zoom · clic sur un plan : sélection</div></main></div>
 <footer id="status">Prêt — visualisation 3D</footer>
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js';
-import {OrbitControls} from 'https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/controls/OrbitControls.js';
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script><script type="module">
+import * as THREE from 'three';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const canvas=document.querySelector('#view'),main=canvas.parentElement;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#e8edf4');
 const camera=new THREE.PerspectiveCamera(45,1,.1,1000);camera.position.set(8,7,9);
